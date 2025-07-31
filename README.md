@@ -1,42 +1,50 @@
-# 💬 e-commerce chatbot (Gen AI RAG project using LLama3.3 and GROQ)
+# E-Commerce Chatbot  
+### GenAI RAG Project using LLaMA 3.3 & GROQ API
 
-This is POC of an intelligent chatbot tailored for an e-commerce platform, enabling seamless user interactions by accurately identifying the intent behind user queries. It leverages real-time access to the platform's database, allowing it to provide precise and up-to-date responses.
-
-Folder structure
-1. app: All the code for chatbot
-2. web-scraping: Code to scrap e-commerce website 
-
-This chatbot currently supports three intents:
-
-- **faq**: Triggered when users ask questions related to the platform's policies or general information. eg. Is online payment available?
-- **sql**: Activated when users request product listings or information based on real-time database queries. eg. Show me all nike shoes below Rs. 3000.
-- **small-talk**: Activated when users start small talk. eg. How are you?
-
-![product screenshot](app/resources/product-ss.png)
-
-
-## Architecture
-![architecture diagram of the e-commerce chatbot](app/resources/architecture-diagram.png)
-
-
-### Set-up & Execution
-
-1. Run the following command to install all dependencies. 
-
-    ```bash
-    pip install -r app/requirements.txt
-    ```
-
-1. Inside app folder, create a .env file with your GROQ credentials as follows:
-    ```text
-    GROQ_MODEL=<Add the model name, e.g. llama-3.3-70b-versatile>
-    GROQ_API_KEY=<Add your groq api key here>
-    ```
-
-1. Run the streamlit app by running the following command.
-
-    ```bash
-    streamlit run app/main.py
-    ```
+This project is a proof-of-concept (PoC) for an intelligent, retrieval-augmented chatbot tailored for e-commerce platforms. It provides context-aware, real-time responses by identifying user intent and integrating with a live product database. Powered by LLaMA 3.3 via GROQ.
 
 ---
+
+## Folder Structure
+
+| Folder         | Description                                                   |
+|----------------|---------------------------------------------------------------|
+| `app/`         | Main chatbot logic, Streamlit UI, and intent-handling modules |
+| `web-scraping/`| Scripts for scraping product data from e-commerce websites    |
+
+---
+
+## Supported Intents
+
+The chatbot supports the following intent types:
+
+- **FAQ**  
+  Answers questions related to platform policies or general info.  
+  Example: `Is online payment available?`
+
+- **SQL Query**  
+  Extracts and filters product data from the database.  
+  Example: `Show me all Nike shoes below Rs. 3000.`
+
+- **Small Talk**  
+  Handles casual user messages.  
+  Example: `How are you?`
+
+---
+
+## Screenshots
+
+**Product Query Result**  
+![Product Screenshot](app/resources/product-ss.png)
+
+**Architecture Diagram**  
+![Architecture Diagram](app/resources/architecture-diagram.png)
+
+---
+
+## Setup & Execution
+
+### 1. Install Dependencies
+
+```bash
+pip install -r app/requirements.txt

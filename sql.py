@@ -12,7 +12,7 @@ GROQ_MODEL = os.getenv('GROQ_MODEL')
 
 db_path = Path(__file__).parent / "db.sqlite"
 
-client_sql = Groq(api_key="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")
+client_sql = Groq(api_key="")
 
 sql_prompt = """You are an expert in understanding the database schema and generating SQL queries for a natural language question asked
 pertaining to the data you have. The schema is provided in the schema tags. 

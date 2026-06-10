@@ -16,7 +16,7 @@ faqs_path = Path(__file__).parent / "resources/faq_data.csv"
 chroma_client = chromadb.PersistentClient(path='./chroma')
 
 collection_name_faq = "faq"
-groq_client = Groq(api_key="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")
+groq_client = Groq(api_key="")
 
 ef = embedding_functions.SentenceTransformerEmbeddingFunction(
     model_name="sentence-transformers/all-MiniLM-L6-v2"

@@ -8,10 +8,12 @@ Pipeline:
 """
 from __future__ import annotations
 
+import logging
 from typing import List, Optional, Tuple
 
 import chromadb
 import pandas as pd
+from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 from config import (
     CHROMA_PATH,
@@ -25,9 +27,14 @@ from config import (
 from llm import chat
 from sentence_transformers import CrossEncoder
 
+# ChromaDB's telemetry is a noisy no-op here (a posthog version mismatch logs a
+# harmless "capture() takes 1 positional..." on every event) — silence it.
+logging.getLogger("chromadb.telemetry").setLevel(logging.CRITICAL)
 chromadb.api.client.SharedSystemClient.clear_system_cache()
 
-_chroma = chromadb.PersistentClient(path=CHROMA_PATH)
+_chroma = chromadb.PersistentClient(
+    path=CHROMA_PATH, settings=Settings(anonymized_telemetry=False)
+)
 _collection_name = "faq"
 _ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=EMBEDDING_MODEL)
 

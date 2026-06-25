@@ -6,17 +6,21 @@ Airflow too — Airflow just schedules it and gives a visual task graph.
 
     scrape_flipkart  ->  build_catalog
 
-The project root is mounted at /opt/airflow/project (see docker-compose).
+Run locally without Docker via `airflow standalone` — see airflow/README.md.
+Set PROJECT_ROOT (or PYTHONPATH) so the `etl` package is importable.
 """
 from __future__ import annotations
 
+import os
 import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
-PROJECT_ROOT = "/opt/airflow/project"
+# Default to the repo root relative to this file; override with PROJECT_ROOT env.
+PROJECT_ROOT = os.environ.get("PROJECT_ROOT", str(Path(__file__).resolve().parents[2]))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 

@@ -1,0 +1,24 @@
+[
+  {"id": 1,  "query": "What is your return policy?", "intent": "faq", "expect_contains": ["30 days", "return"]},
+  {"id": 2,  "query": "How do I track my order?", "intent": "faq", "expect_contains": ["track"]},
+  {"id": 3,  "query": "Do you ship internationally?", "intent": "faq", "expect_contains": ["international"]},
+  {"id": 4,  "query": "How long does a refund take?", "intent": "faq", "expect_contains": ["5", "7", "business days"]},
+  {"id": 5,  "query": "Can I pay with cash on delivery?", "intent": "faq", "expect_contains": ["cash"]},
+  {"id": 6,  "query": "Is there an HDFC card discount?", "intent": "faq", "expect_contains": ["HDFC", "10%"]},
+  {"id": 7,  "query": "Can I cancel my order after placing it?", "intent": "faq", "expect_contains": ["1 hour", "cancel"]},
+  {"id": 8,  "query": "What do I do if my product arrives damaged?", "intent": "faq", "expect_contains": ["48 hours", "support"]},
+
+  {"id": 9,  "query": "Show me Nike shoes under 3000", "intent": "sql", "expect_contains": []},
+  {"id": 10, "query": "Top 3 highest rated Puma shoes", "intent": "sql", "expect_contains": []},
+  {"id": 11, "query": "Adidas shoes with at least 50% discount", "intent": "sql", "expect_contains": []},
+  {"id": 12, "query": "Cheapest Campus shoes", "intent": "sql", "expect_contains": []},
+  {"id": 13, "query": "Shoes priced between 1000 and 2000", "intent": "sql", "expect_contains": []},
+  {"id": 14, "query": "Which Reebok shoes have a rating above 4?", "intent": "sql", "expect_contains": []},
+  {"id": 15, "query": "Show me the most reviewed shoes", "intent": "sql", "expect_contains": []},
+  {"id": 16, "query": "Skechers shoes under 4000 with good ratings", "intent": "sql", "expect_contains": []},
+
+  {"id": 17, "query": "Hi there", "intent": "small-talk", "expect_contains": []},
+  {"id": 18, "query": "How are you doing today?", "intent": "small-talk", "expect_contains": []},
+  {"id": 19, "query": "What can you help me with?", "intent": "small-talk", "expect_contains": []},
+  {"id": 20, "query": "Are you a real person?", "intent": "small-talk", "expect_contains": []}
+]

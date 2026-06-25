@@ -4,7 +4,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from etl import transform, validate  # noqa: E402
+import sqlite3  # noqa: E402
+
+from etl import load, transform, validate  # noqa: E402
 
 
 def _raw(**kw):
@@ -41,3 +43,22 @@ def test_validate_raises_when_mostly_invalid():
     rows = transform.normalize([_raw(), _raw(price=0), _raw(price=0)])
     with pytest.raises(ValueError):
         validate.validate(rows)
+
+
+def test_load_is_idempotent_upsert(tmp_path):
+    db = tmp_path / "t.sqlite"
+    rows = transform.normalize([_raw(product_link="http://a"), _raw(product_link="http://b")])
+
+    load.load(rows, db_path=db)
+    load.load(rows, db_path=db)  # second run must not duplicate
+
+    with sqlite3.connect(db) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM product").fetchone()[0] == 2
+
+        # A changed price upserts in place (no new row).
+        updated = transform.normalize([_raw(product_link="http://a", price=999)])
+        load.load(updated, db_path=db)
+        assert conn.execute("SELECT COUNT(*) FROM product").fetchone()[0] == 2
+        assert conn.execute(
+            "SELECT price FROM product WHERE product_link='http://a'"
+        ).fetchone()[0] == 999

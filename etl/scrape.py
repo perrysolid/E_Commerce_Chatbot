@@ -128,14 +128,29 @@ def scrape(pages: int = 20, delay: float = 1.0, min_rows: int = 0) -> pd.DataFra
             time.sleep(delay)
     df = pd.DataFrame(rows)
     # Safety guard: if the scrape was blocked/throttled and returned too little,
-    # keep the last good snapshot instead of overwriting it with garbage.
+    # keep the last good snapshot instead of merging in garbage.
     if min_rows and len(df) < min_rows:
         print(f"Only {len(df)} rows (< {min_rows}); keeping existing snapshot.")
         return df
-    RAW_CSV.parent.mkdir(exist_ok=True)
-    df.to_csv(RAW_CSV, index=False)
-    print(f"Saved {len(df)} products to {RAW_CSV}")
+    df = _upsert_snapshot(df)
+    print(f"Snapshot now has {len(df)} products at {RAW_CSV}")
     return df
+
+
+def _upsert_snapshot(new_df: pd.DataFrame) -> pd.DataFrame:
+    """Idempotent upsert into the CSV snapshot, keyed on product_link.
+
+    Re-scraped items update in place (fresh price/rating), genuinely new items
+    are added, and unchanged data produces an identical file (no spurious diff),
+    so a daily commit only happens when something actually changed.
+    """
+    if RAW_CSV.exists():
+        old = pd.read_csv(RAW_CSV)
+        new_df = pd.concat([new_df, old]).drop_duplicates(subset="product_link", keep="first")
+    new_df = new_df.sort_values(["category", "product_link"]).reset_index(drop=True)
+    RAW_CSV.parent.mkdir(exist_ok=True)
+    new_df.to_csv(RAW_CSV, index=False)
+    return new_df
 
 
 if __name__ == "__main__":

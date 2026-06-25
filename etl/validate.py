@@ -14,6 +14,8 @@ ALLOWED_CATEGORIES = {
 
 
 def is_valid(row: Dict) -> bool:
+    if not row.get("product_link"):  # the upsert key must be present
+        return False
     if not row.get("title"):
         return False
     if row.get("category") not in ALLOWED_CATEGORIES:

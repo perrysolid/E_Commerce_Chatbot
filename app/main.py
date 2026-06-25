@@ -6,8 +6,15 @@ try:
 except ImportError:
     pass
 
+import sys
+from pathlib import Path
+
+# Make the etl package importable so the app can build its own DB on first run
+# (the SQLite file is a build artifact and is not committed).
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 import streamlit as st
-from config import ROUTER_CONFIDENCE_THRESHOLD
+from config import DB_PATH, ROUTER_CONFIDENCE_THRESHOLD
 from faq import faq_chain, ingest_faq_data
 from memory import ConversationMemory
 from router import route
@@ -22,7 +29,14 @@ CLARIFY = (
 
 @st.cache_resource
 def _bootstrap():
-    """Ingest FAQ data once per server process."""
+    """Build the catalog from the committed snapshot (if needed) and ingest FAQs.
+
+    Runs once per server process, so a fresh deploy (e.g. Streamlit Cloud) works
+    with no manual setup.
+    """
+    if not DB_PATH.exists():
+        from etl.pipeline import run_etl
+        run_etl()
     ingest_faq_data()
     return True
 

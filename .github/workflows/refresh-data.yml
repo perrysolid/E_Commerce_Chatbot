@@ -1,10 +1,11 @@
-name: Daily data refresh
+name: Daily data refresh (shallow)
 
-# Re-scrapes Flipkart once a day and commits the refreshed snapshot. The commit
-# auto-redeploys the app on Streamlit Cloud, so the live catalog stays current.
+# Shallow daily scrape (top pages, where prices/ratings actually move). The
+# upsert merges updates into the snapshot; the weekly deep scrape adds new items.
+# An unchanged scrape produces an identical CSV -> no commit -> no redeploy.
 on:
   schedule:
-    - cron: "30 1 * * *"   # 01:30 UTC ≈ 07:00 IST, daily
+    - cron: "30 18 * * *"   # 18:30 UTC = 00:00 IST (midnight), daily
   workflow_dispatch:        # allow manual runs from the Actions tab
 
 permissions:
@@ -24,8 +25,8 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
-      - name: Scrape Flipkart (keep last good snapshot if blocked)
-        run: python -m etl.scrape --pages 20 --min-rows 1000
+      - name: Scrape Flipkart — shallow (keep last good snapshot if blocked)
+        run: python -m etl.scrape --pages 5 --min-rows 300
 
       - name: Rebuild catalog (sanity check)
         run: python -m etl.pipeline
@@ -35,5 +36,5 @@ jobs:
           git config user.name "parth mishra"
           git config user.email "parthmishra2504@gmail.com"
           git add data/flipkart_electronics_raw.csv
-          git diff --staged --quiet || git commit -m "chore: daily data refresh [skip ci]"
+          git diff --staged --quiet || git commit -m "chore: daily shallow data refresh [skip ci]"
           git push

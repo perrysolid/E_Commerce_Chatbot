@@ -21,10 +21,18 @@ CREATE TABLE IF NOT EXISTS product (
     title         TEXT,
     brand         TEXT,
     category      TEXT,
+    rank          INTEGER,
     price         INTEGER,
     discount      REAL,
     avg_rating    REAL,
-    total_ratings INTEGER
+    total_ratings INTEGER,
+    ram_gb        INTEGER,
+    storage_gb    INTEGER,
+    screen_inch   REAL,
+    network       TEXT,
+    processor     TEXT,
+    resolution    TEXT,
+    battery_hours INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_brand ON product(brand);
 CREATE INDEX IF NOT EXISTS idx_category ON product(category);

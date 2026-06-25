@@ -106,6 +106,7 @@ def scrape(pages: int = 20, delay: float = 1.0, min_rows: int = 0) -> pd.DataFra
     seen = set()
     rows: List[Dict] = []
     for category, query in CATEGORIES.items():
+        position = 0  # Flipkart relevance order within a category (page 1 first)
         for page in range(1, pages + 1):
             url = f"https://www.flipkart.com/search?q={query.replace(' ', '+')}&page={page}"
             try:
@@ -121,7 +122,9 @@ def scrape(pages: int = 20, delay: float = 1.0, min_rows: int = 0) -> pd.DataFra
                 if not rec or rec["product_link"] in seen:
                     continue
                 seen.add(rec["product_link"])
+                position += 1
                 rec["category"] = category
+                rec["rank"] = position
                 rows.append(rec)
                 new += 1
             print(f"  {category} p{page}: +{new} (total {len(rows)})")

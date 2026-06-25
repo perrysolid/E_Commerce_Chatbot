@@ -26,10 +26,18 @@ title - string (name of the product)
 brand - string (brand of the product)
 category - string, one of:
   mobiles, laptops, headphones, smartwatches, televisions, tablets, earbuds
+rank - integer (Flipkart relevance position within a category; 1 = most relevant/popular)
 price - integer (price in Indian Rupees)
 discount - float (0.1 means 10 percent off, 0.2 means 20 percent off)
 avg_rating - float (0-5, higher is better)
 total_ratings - integer (number of ratings)
+ram_gb - integer, RAM in GB (nullable)
+storage_gb - integer, storage in GB (nullable)
+screen_inch - float, screen size in inches (nullable)
+network - string, '5G' or '4G' (nullable)
+processor - string, chipset/CPU e.g. 'Snapdragon 695', 'Intel Core I5' (nullable)
+resolution - string, display quality e.g. 'Full HD', '4K', 'QLED' (nullable, mostly TVs)
+battery_hours - integer, battery or playtime in hours (nullable, mostly audio)
 </schema>
 Rules:
 - Match brand case-insensitively using LIKE (e.g. brand LIKE '%samsung%'). Never use ILIKE.
@@ -38,6 +46,14 @@ Rules:
   not the brand. Match those with title LIKE — e.g. 'iPhone' -> title LIKE '%iphone%'
   (its brand is 'Apple'), 'Galaxy F36' -> title LIKE '%galaxy%' AND title LIKE '%f36%'.
 - Use the category column for product types (e.g. category = 'laptops').
+- Spec fields (ram_gb, storage_gb, screen_inch, network, processor, ...) can be NULL.
+  When filtering on a spec, also require it IS NOT NULL.
+- Ordering matters for quality:
+  - Default (no sort asked for): ORDER BY rank ASC — Flipkart's most relevant first.
+  - "best rated" / "top rated": only credible items, total_ratings >= 50,
+    ORDER BY avg_rating DESC, total_ratings DESC.
+  - "most popular" / "most reviewed": ORDER BY total_ratings DESC.
+  - "cheapest": ORDER BY price ASC. "biggest discount": ORDER BY discount DESC.
 - Always SELECT * (all fields).
 - If a needed value is ambiguous — e.g. a price like 'under 2' with no unit
   (does it mean Rs 2 thousand or Rs 2 lakh?) — do NOT guess. Instead return one short

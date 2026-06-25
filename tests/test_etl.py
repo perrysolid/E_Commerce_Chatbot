@@ -26,6 +26,25 @@ def test_normalize_derives_brand_and_types():
     assert set(row) == set(transform.UNIFIED_FIELDS)
 
 
+def test_normalize_extracts_specs_from_title():
+    mobile = transform.normalize([_raw(
+        title="realme P4R 5G (8 GB RAM, 128 GB) Snapdragon 695")])[0]
+    assert mobile["ram_gb"] == 8
+    assert mobile["storage_gb"] == 128
+    assert mobile["network"] == "5G"
+    assert "Snapdragon" in (mobile["processor"] or "")
+
+    tv = transform.normalize([_raw(
+        category="televisions", title="Foxsky 109 cm (43 inch) Full HD LED Smart TV")])[0]
+    assert tv["screen_inch"] == 43.0
+    assert tv["resolution"] == "Full HD"
+
+    laptop = transform.normalize([_raw(
+        category="laptops", title="HP Intel Core i5 (16 GB/512 GB SSD) 15.6 inch")])[0]
+    assert laptop["ram_gb"] == 16 and laptop["storage_gb"] == 512
+    assert laptop["screen_inch"] == 15.6
+
+
 def test_validate_drops_bad_rows():
     rows = transform.normalize([
         _raw(), _raw(), _raw(), _raw(),  # 4 valid (keep majority valid)

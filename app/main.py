@@ -34,20 +34,21 @@ BROWSE_ALL = "Just browsing"
 
 FAQ_SAMPLES = ["What is your return policy?", "How do I track my order?"]
 SAMPLE_QUESTIONS = {
-    "mobiles": ["Show Samsung phones under ₹20,000", "Best rated 5G phones",
-                "Cheapest phones with good ratings"],
-    "laptops": ["Laptops under ₹50,000", "Top rated laptops",
-                "Laptops with the biggest discount"],
+    "mobiles": ["Samsung 5G phones under ₹20,000", "Snapdragon phones with 8 GB RAM",
+                "Best rated phones with 128 GB storage"],
+    "laptops": ["Intel i5 laptops under ₹60,000", "Laptops with 16 GB RAM",
+                "Top rated laptops"],
     "headphones": ["boAt headphones under ₹2,000", "Best rated wireless headphones",
                    "Headphones with the biggest discount"],
-    "smartwatches": ["Smartwatches under ₹2,000", "Fire-Boltt smartwatches",
-                     "Cheapest smartwatches"],
-    "televisions": ["43 inch TVs under ₹30,000", "Top rated smart TVs",
-                    "Televisions with the biggest discount"],
-    "tablets": ["Tablets under ₹15,000", "Top rated tablets", "Samsung tablets"],
-    "earbuds": ["Earbuds under ₹1,000", "Best rated true wireless earbuds",
-                "boAt earbuds on sale"],
-    BROWSE_ALL: ["Show me laptops under ₹50,000", "Best rated headphones",
+    "smartwatches": ["Smartwatches under ₹2,000", "Best rated smartwatches",
+                     "Smartwatches with a big display"],
+    "televisions": ["43 inch 4K TVs", "Full HD TVs under ₹30,000",
+                    "Top rated smart TVs"],
+    "tablets": ["Tablets with 128 GB storage", "Top rated tablets under ₹20,000",
+                "Tablets with 4G"],
+    "earbuds": ["Earbuds with 40+ hours battery", "Best rated true wireless earbuds",
+                "boAt earbuds under ₹1,500"],
+    BROWSE_ALL: ["Intel i5 laptops under ₹60,000", "Best rated 5G phones",
                  "What is your return policy?"],
 }
 

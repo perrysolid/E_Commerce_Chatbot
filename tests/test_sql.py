@@ -22,6 +22,20 @@ def test_format_products_prices_match_data_exactly():
     assert shown == {19999, 8499}
 
 
+def test_format_products_collapses_colour_variants():
+    df = pd.DataFrame([
+        {"title": "Moto g57 (Corsair, 128 GB)", "price": 20999, "discount": 0.0,
+         "avg_rating": 4.4, "total_ratings": 48000, "product_link": "http://x/1"},
+        {"title": "Moto g57 (Fluidity, 128 GB)", "price": 20999, "discount": 0.0,
+         "avg_rating": 4.4, "total_ratings": 48000, "product_link": "http://x/2"},
+        {"title": "Redmi 15 (Black, 128 GB)", "price": 24999, "discount": 0.0,
+         "avg_rating": 4.4, "total_ratings": 1442, "product_link": "http://x/3"},
+    ])
+    out = sql.format_products(df)
+    assert out.count("http://x/") == 2          # two distinct products, not three
+    assert "2 products" in out and "2 colours" in out
+
+
 def test_extract_sql_found():
     raw = "Here you go <SQL>SELECT * FROM product LIMIT 1;</SQL> done"
     assert sql._extract_sql(raw) == "SELECT * FROM product LIMIT 1;"

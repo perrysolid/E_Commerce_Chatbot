@@ -138,18 +138,35 @@ def run_query(query: str) -> pd.DataFrame:
         return pd.read_sql_query(query, conn)
 
 
+def _variant_key(title: str, price: int):
+    """Same model in a different colour shares this key (parenthetical stripped)."""
+    base = re.sub(r"\s*\([^)]*\)", "", str(title)).strip().lower()
+    return base, price
+
+
 def format_products(df: pd.DataFrame, limit: int = RESULT_LIMIT) -> str:
-    """Render results straight from the rows — no LLM touches the numbers, so
-    every price/rating/discount shown is guaranteed to match the database."""
-    total = len(df)
-    head = "Here's what I found:" if total <= limit else f"Found {total} products. Top {limit}:"
+    """Render results straight from the rows — no LLM touches the numbers, so every
+    price/rating/discount shown matches the database. Colour variants of the same
+    model (same name + price) are collapsed into one entry, order preserved."""
+    groups: dict = {}
+    order = []
+    for row in df.itertuples(index=False):
+        key = _variant_key(row.title, int(row.price))
+        if key not in groups:
+            groups[key] = 0
+            order.append((key, row))
+        groups[key] += 1
+
+    distinct = len(order)
+    head = "Here's what I found:" if distinct <= limit else f"Found {distinct} products. Top {limit}:"
     lines = [head]
-    for i, row in enumerate(df.head(limit).itertuples(index=False), 1):
+    for i, (key, row) in enumerate(order[:limit], 1):
         price = f"₹{int(row.price):,}"
         discount = f" ({round(row.discount * 100)}% off)" if getattr(row, "discount", 0) else ""
         rating = (f"{row.avg_rating}★ ({int(row.total_ratings):,} ratings)"
                   if getattr(row, "avg_rating", 0) else "no ratings yet")
-        lines.append(f"{i}. {row.title} — {price}{discount}, {rating}\n   {row.product_link}")
+        colours = f" · {groups[key]} colours" if groups[key] > 1 else ""
+        lines.append(f"{i}. {row.title} — {price}{discount}, {rating}{colours}\n   {row.product_link}")
     return "\n".join(lines)
 
 

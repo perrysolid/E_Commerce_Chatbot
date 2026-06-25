@@ -33,6 +33,10 @@ ROUTES: Dict[str, List[str]] = {
         "Which smartwatches have the best rating?",
         "What is the price of an iPhone?",
         "Show me the top rated 43 inch televisions",
+        "Show me Puma shoes between 1000 and 5000.",
+        "Find Nike shoes with the biggest discount.",
+        "Open product cards for the items I searched.",
+        "Show me products I can buy in this price range.",
     ],
     "small-talk": [
         "Hi",

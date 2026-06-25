@@ -33,9 +33,16 @@ total_ratings - integer (number of ratings)
 </schema>
 Rules:
 - Match brand case-insensitively using LIKE (e.g. brand LIKE '%samsung%'). Never use ILIKE.
+- The brand is the manufacturer (e.g. 'Apple', 'Samsung', 'boAt'). Product lines and
+  model names (e.g. 'iPhone', 'Galaxy F36', 'Redmi Note', 'Rockerz') live in the TITLE,
+  not the brand. Match those with title LIKE — e.g. 'iPhone' -> title LIKE '%iphone%'
+  (its brand is 'Apple'), 'Galaxy F36' -> title LIKE '%galaxy%' AND title LIKE '%f36%'.
 - Use the category column for product types (e.g. category = 'laptops').
 - Always SELECT * (all fields).
-- Return ONLY the query, wrapped in <SQL></SQL> tags. Nothing else."""
+- If a needed value is ambiguous — e.g. a price like 'under 2' with no unit
+  (does it mean Rs 2 thousand or Rs 2 lakh?) — do NOT guess. Instead return one short
+  clarifying question wrapped in <CLARIFY></CLARIFY> tags and no SQL.
+- Otherwise return ONLY the query, wrapped in <SQL></SQL> tags. Nothing else."""
 
 RESULT_LIMIT = 8
 
@@ -58,6 +65,11 @@ def generate_sql_query(question: str, error: Optional[str] = None) -> str:
 
 def _extract_sql(text: str) -> Optional[str]:
     matches = re.findall(r"<SQL>(.*?)</SQL>", text, re.DOTALL)
+    return matches[0].strip() if matches else None
+
+
+def _extract_clarify(text: str) -> Optional[str]:
+    matches = re.findall(r"<CLARIFY>(.*?)</CLARIFY>", text, re.DOTALL)
     return matches[0].strip() if matches else None
 
 
@@ -92,6 +104,9 @@ def sql_chain(question: str, history: Optional[str] = None) -> str:
     # Self-correction loop: try once, then retry with the error fed back.
     for attempt in range(SQL_MAX_RETRIES + 1):
         raw = generate_sql_query(q, error=error)
+        clarify = _extract_clarify(raw)
+        if clarify:  # ambiguous request -> ask instead of guessing
+            return clarify
         sql = _extract_sql(raw)
         if not sql:
             return "Sorry, I couldn't turn that into a product query. Try rephrasing?"

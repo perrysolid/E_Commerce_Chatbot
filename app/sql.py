@@ -83,10 +83,11 @@ Rules:
   'Intel Core I5', 'Ryzen 5', 'Snapdragon 695'): 'i5' -> processor LIKE '%i5%';
   'Ryzen 5' -> processor LIKE '%ryzen 5%'; 'Snapdragon' -> processor LIKE '%snapdragon%'.
 - Spec fields can be NULL; when filtering on a spec also require it IS NOT NULL.
-- Ordering:
-  - Default (no sort requested): ORDER BY rank ASC (most relevant first).
+- Ordering (number of reviews matters — well-reviewed products are more trustworthy):
+  - Default (no sort requested): ORDER BY (total_ratings >= 100) DESC, rank ASC
+    — credible, well-reviewed products first, then Flipkart relevance.
   - "best/top rated": total_ratings >= 50, ORDER BY avg_rating DESC, total_ratings DESC.
-  - "most reviewed"/"popular": ORDER BY total_ratings DESC.
+  - "most reviewed"/"popular"/"trusted": ORDER BY total_ratings DESC.
   - "cheapest": ORDER BY price ASC.  "biggest discount": ORDER BY discount DESC.
 - Always SELECT * (all fields).
 - If a value is ambiguous — e.g. a price 'under 2' with no unit (Rs 2 thousand? Rs 2 lakh?) —
@@ -158,7 +159,8 @@ def format_products(df: pd.DataFrame, limit: int = RESULT_LIMIT) -> str:
         groups[key] += 1
 
     distinct = len(order)
-    head = "Here's what I found:" if distinct <= limit else f"Found {distinct} products. Top {limit}:"
+    head = ("Here's what I found:" if distinct <= limit
+            else f"Found {distinct} products. Top {limit}:")
     lines = [head]
     for i, (key, row) in enumerate(order[:limit], 1):
         price = f"₹{int(row.price):,}"
@@ -166,7 +168,9 @@ def format_products(df: pd.DataFrame, limit: int = RESULT_LIMIT) -> str:
         rating = (f"{row.avg_rating}★ ({int(row.total_ratings):,} ratings)"
                   if getattr(row, "avg_rating", 0) else "no ratings yet")
         colours = f" · {groups[key]} colours" if groups[key] > 1 else ""
-        lines.append(f"{i}. {row.title} — {price}{discount}, {rating}{colours}\n   {row.product_link}")
+        lines.append(
+            f"{i}. {row.title} — {price}{discount}, {rating}{colours}\n   {row.product_link}"
+        )
     return "\n".join(lines)
 
 

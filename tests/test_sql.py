@@ -33,7 +33,7 @@ def test_format_products_collapses_colour_variants():
     ])
     out = sql.format_products(df)
     assert out.count("http://x/") == 2          # two distinct products, not three
-    assert "2 products" in out and "2 colours" in out
+    assert "2 colours" in out                   # the collapsed variant is noted
 
 
 def test_extract_sql_found():

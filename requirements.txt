@@ -1,0 +1,9 @@
+streamlit==1.46.1
+pandas==2.3.3
+numpy==1.24.3
+python-dotenv==1.0.0
+groq==0.31.0
+pydantic>=2,<3
+chromadb==0.5.5
+sentence-transformers==2.7.0
+pysqlite3-binary; sys_platform == "linux"

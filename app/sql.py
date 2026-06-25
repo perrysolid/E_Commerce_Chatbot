@@ -37,11 +37,7 @@ Rules:
 - Always SELECT * (all fields).
 - Return ONLY the query, wrapped in <SQL></SQL> tags. Nothing else."""
 
-COMPREHENSION_PROMPT = """You turn product rows into a short natural-language answer.
-You are given QUESTION and DATA (a list of product dicts). Use ONLY the data.
-Never invent products or fields. Do not say "based on the data".
-List each product on its own line in this format:
-1. <title>: Rs. <price> (<discount as percent> off), Rating: <avg_rating> <product_link>"""
+RESULT_LIMIT = 8
 
 
 def generate_sql_query(question: str, error: Optional[str] = None) -> str:
@@ -73,15 +69,19 @@ def run_query(query: str) -> pd.DataFrame:
         return pd.read_sql_query(query, conn)
 
 
-def data_comprehension(question: str, context) -> str:
-    return chat(
-        messages=[
-            {"role": "system", "content": COMPREHENSION_PROMPT},
-            {"role": "user", "content": f"QUESTION: {question}. DATA: {context}"},
-        ],
-        temperature=0.2,
-        max_tokens=1024,
-    )
+def format_products(df: pd.DataFrame, limit: int = RESULT_LIMIT) -> str:
+    """Render results straight from the rows — no LLM touches the numbers, so
+    every price/rating/discount shown is guaranteed to match the database."""
+    total = len(df)
+    head = "Here's what I found:" if total <= limit else f"Found {total} products. Top {limit}:"
+    lines = [head]
+    for i, row in enumerate(df.head(limit).itertuples(index=False), 1):
+        price = f"₹{int(row.price):,}"
+        discount = f" ({round(row.discount * 100)}% off)" if getattr(row, "discount", 0) else ""
+        rating = (f"{row.avg_rating}★ ({int(row.total_ratings):,} ratings)"
+                  if getattr(row, "avg_rating", 0) else "no ratings yet")
+        lines.append(f"{i}. {row.title} — {price}{discount}, {rating}\n   {row.product_link}")
+    return "\n".join(lines)
 
 
 def sql_chain(question: str, history: Optional[str] = None) -> str:
@@ -108,10 +108,9 @@ def sql_chain(question: str, history: Optional[str] = None) -> str:
     if df.empty:
         return "I couldn't find any products matching that. Try widening your search."
 
-    context = df.to_dict(orient="records")
-    return data_comprehension(question, context)
+    return format_products(df)
 
 
 if __name__ == "__main__":
-    print(sql_chain("Show top 3 shoes in descending order of rating"))
-    print(sql_chain("Show me shoes under 1 rupee"))  # should report none found
+    print(sql_chain("Show top 3 laptops in descending order of rating"))
+    print(sql_chain("Show me phones under 1 rupee"))  # should report none found

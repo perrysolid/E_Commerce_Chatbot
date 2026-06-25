@@ -85,9 +85,14 @@ flowchart TD
     FIX --> GEN
     V -->|ok| RES{Rows returned?}
     RES -->|none| NF["'No products found'<br/>(no invented items)"]
-    RES -->|yes| NL[LLM summarises<br/>rows only]
+    RES -->|yes| NL["Render rows deterministically<br/>(prices straight from DB,<br/>no LLM in the number path)"]
     NL --> O[Answer]
 ```
+
+> **Prices are guaranteed correct.** The result list is formatted in Python
+> directly from the query rows, so every price/discount/rating shown is exactly
+> what's in the database — the LLM never transcribes a number. This also drops an
+> LLM call, so SQL answers are faster and cheaper.
 
 ---
 
@@ -183,10 +188,14 @@ See [`airflow/README.md`](airflow/README.md) — `pip install apache-airflow` th
 `GROQ_MODEL`) under the app's **Secrets**. The app builds its own database on
 startup, so there is no separate build step. Every push to `main` auto-redeploys.
 
-**Daily refresh:** the [`refresh-data`](.github/workflows/refresh-data.yml)
-GitHub Actions workflow runs on a daily cron — it re-scrapes Flipkart, keeps the
-last good snapshot if the scrape is throttled, and commits the refreshed CSV,
-which auto-redeploys the live app with current prices and ratings.
+**Daily refresh (tiered + idempotent):** a **daily shallow** scrape at 00:00 IST
+([`refresh-data.yml`](.github/workflows/refresh-data.yml), top pages where prices
+move) and a **weekly deep** scrape
+([`refresh-data-weekly.yml`](.github/workflows/refresh-data-weekly.yml), new
+products). Both **upsert by `product_link`** — re-scraped items update in place,
+new items are added, and identical data produces a byte-identical CSV, so a
+commit (and redeploy) only happens when something actually changed. If a scrape
+is throttled, the last good snapshot is kept.
 
 ```mermaid
 flowchart LR

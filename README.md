@@ -104,7 +104,7 @@ flowchart TD
 | No conversation context | **Memory layer** (window + running summary) for follow-ups |
 | No way to know if it works | **Eval harness**: routing accuracy, LLM-as-judge faithfulness, SQL success |
 | Hardcoded API key in source | Env-based config + `.env.example`, key never committed |
-| No tests / CI / deploy | **pytest + ruff + GitHub Actions** and a **Dockerfile** |
+| No tests / CI / deploy | **pytest + ruff + GitHub Actions**, deployed on **Streamlit Cloud** with a **daily auto-refresh** |
 
 ---
 
@@ -129,17 +129,17 @@ python eval/evaluate.py     # writes eval/reports/report.json and metrics.png
 `Streamlit` · `Groq (gpt-oss-120b)` · `ChromaDB` · `sentence-transformers`
 (bi-encoder retrieval + cross-encoder rerank) · `SQLite` · `Flipkart scraping
 (requests + BeautifulSoup)` · `Apache Airflow` · `pytest` · `ruff`
-· `GitHub Actions` · `Docker`
+· `GitHub Actions (CI + scheduled refresh)` · `Streamlit Community Cloud`
 
 ## Project structure
 
 ```
 app/        chatbot: router, faq, sql, smalltalk, memory, llm, config
 etl/        scrape.py + extract/transform/validate/load + pipeline.py
-airflow/    dags/ + docker-compose.yaml (LocalExecutor)
+airflow/    dags/ + README (run with `airflow standalone`, no Docker)
 eval/       golden_dataset.json + evaluate.py (metrics + charts)
 tests/      unit + smoke tests (no API key needed)
-.github/    CI workflow
+.github/    CI workflow + daily data-refresh workflow
 ```
 
 ---
@@ -155,27 +155,12 @@ tests/      unit + smoke tests (no API key needed)
    cp .env.example app/.env   # then edit app/.env
    ```
    Get a free key at <https://console.groq.com/keys>.
-3. Build the catalog database from the committed snapshot:
-   ```bash
-   python -m etl.pipeline
-   ```
-   To refresh the snapshot from Flipkart first: `pip install -r requirements-dev.txt && python -m etl.scrape --pages 20`
-4. Run the app:
+3. Run the app (it builds the catalog DB from the committed snapshot on first run):
    ```bash
    streamlit run app/main.py
    ```
-
-### Run the ETL in Airflow (local)
-
-```bash
-cd airflow && docker compose up      # UI at http://localhost:8080 (airflow/airflow)
-```
-
-### Run with Docker
-
-```bash
-docker compose up --build            # reads GROQ_API_KEY from your environment
-```
+   To refresh the snapshot from Flipkart first:
+   `pip install -r requirements-dev.txt && python -m etl.scrape --pages 20`
 
 ### Run the tests
 
@@ -183,3 +168,32 @@ docker compose up --build            # reads GROQ_API_KEY from your environment
 pip install -r requirements-dev.txt
 pytest -q
 ```
+
+### Run the ETL in Airflow (local, no Docker)
+
+See [`airflow/README.md`](airflow/README.md) — `pip install apache-airflow` then
+`airflow standalone`.
+
+---
+
+## Deployment & daily refresh
+
+**Deploy (Streamlit Community Cloud):** point it at this repo with
+`app/main.py` as the entry file, and add `GROQ_API_KEY` (and optionally
+`GROQ_MODEL`) under the app's **Secrets**. The app builds its own database on
+startup, so there is no separate build step. Every push to `main` auto-redeploys.
+
+**Daily refresh:** the [`refresh-data`](.github/workflows/refresh-data.yml)
+GitHub Actions workflow runs on a daily cron — it re-scrapes Flipkart, keeps the
+last good snapshot if the scrape is throttled, and commits the refreshed CSV,
+which auto-redeploys the live app with current prices and ratings.
+
+```mermaid
+flowchart LR
+    CRON[GitHub Actions<br/>daily cron] -->|scrape| SNAP[(updated snapshot)]
+    SNAP -->|commit + push| GH[(GitHub main)]
+    GH -->|auto-redeploy| APP[Streamlit Cloud app]
+```
+
+The Airflow DAG schedules the same pipeline and is the orchestration showcase;
+the cron is what actually runs daily without an always-on server.

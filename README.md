@@ -1,23 +1,49 @@
-# 🛍️ E-Commerce Chatbot — RAG + Text-to-SQL with anti-hallucination guardrails
+# 🛍️ Indian Electronics Store Chatbot — RAG + Text-to-SQL with an Airflow ETL pipeline
 
 ![CI](https://github.com/perrysolid/E_Commerce_Chatbot/actions/workflows/ci.yml/badge.svg)
 
-A grounded shopping assistant for an e-commerce catalog. It classifies each
-message into an intent and answers it from a **real data source** — never from
-the model's imagination:
+A grounded shopping assistant for an Indian electronics catalog (mobiles,
+laptops, headphones, smartwatches, televisions, tablets, earbuds). Product data
+is scraped from Flipkart by an **Airflow-orchestrated ETL pipeline**, and the
+chatbot answers every question from a **real data source** — never from the
+model's imagination:
 
 - **FAQ** → retrieval-augmented answers over a store-policy knowledge base
 - **SQL** → live text-to-SQL queries against the product catalog
 - **Small-talk** → short, on-brand chit-chat
 
-The focus of this project is **measurably reducing LLM hallucination**:
+The two themes of this project are **measurably reducing LLM hallucination** and
+**a reproducible data pipeline**:
 cross-encoder reranking + corrective-RAG gating, self-correcting SQL, a router
-confidence gate that asks clarifying questions, and an **evaluation harness**
-that turns "feels better" into numbers.
+confidence gate that asks clarifying questions, an **evaluation harness** with an
+LLM-as-judge faithfulness metric, and an **ETL pipeline** (Airflow) that keeps
+the catalog fresh.
 
 ---
 
-## Architecture
+## Data pipeline (ETL, orchestrated by Airflow)
+
+```mermaid
+flowchart LR
+    F[(Flipkart<br/>7 categories)] -->|scrape| E[extract<br/>etl/scrape.py]
+    E --> RAW[(CSV snapshot)]
+    RAW --> T[transform<br/>brand, types]
+    T --> V[validate<br/>data quality]
+    V --> L[load]
+    L --> DB[(SQLite catalog<br/>~2.5k products)]
+
+    subgraph Airflow DAG
+      direction LR
+      S[scrape_flipkart] --> B[build_catalog]
+    end
+```
+
+The real work lives in the framework-agnostic `etl/` package, so the pipeline is
+unit-testable and runs **with or without Airflow**. Airflow just schedules it and
+gives a visual task graph. The scrape is snapshotted to a CSV so CI and the app
+never depend on a live scrape.
+
+## Chatbot architecture
 
 ```mermaid
 flowchart TD
@@ -27,10 +53,7 @@ flowchart TD
     R -->|sql| SQL[Text-to-SQL pipeline]
     R -->|small-talk| ST[Small-talk]
 
-    subgraph Memory
-      M[(Window + running summary)]
-    end
-    M -.context.-> FAQ
+    M[(Window + running summary memory)] -.context.-> FAQ
     M -.context.-> SQL
     M -.context.-> ST
 
@@ -72,14 +95,15 @@ flowchart TD
 
 | Problem in the original POC | Fix in this version |
 | --- | --- |
+| One product category, notebook-loaded | **7-category ETL pipeline** scraping ~2.5k live Flipkart products |
+| No orchestration | **Airflow DAG** (scrape → build) with the logic in a testable `etl/` package |
 | Always answered FAQs even when retrieval was irrelevant | Cross-encoder rerank + **corrective-RAG gate** (refuse below threshold) |
 | SQL chain invented products on empty results | Explicit "no products found" + **SELECT-only** validation |
 | One bad query = dead end | **Self-correcting** retry that feeds the SQL error back to the model |
 | Router guessed on ambiguous input | **Confidence gate** → asks a clarifying question |
 | No conversation context | **Memory layer** (window + running summary) for follow-ups |
-| No way to know if it works | **Eval harness** with routing accuracy, grounding rate, SQL success, latency |
+| No way to know if it works | **Eval harness**: routing accuracy, LLM-as-judge faithfulness, SQL success |
 | Hardcoded API key in source | Env-based config + `.env.example`, key never committed |
-| Notebook-based, irreproducible data | One-command **`build_db.py`** pipeline + `category` schema |
 | No tests / CI / deploy | **pytest + ruff + GitHub Actions** and a **Dockerfile** |
 
 ---
@@ -89,14 +113,13 @@ flowchart TD
 Run the offline evaluation against the labeled golden set:
 
 ```bash
-python eval/evaluate.py
+python eval/evaluate.py     # writes eval/reports/report.json and metrics.png
 ```
 
-It writes `eval/reports/report.json` and `eval/reports/metrics.png`:
-
 - **Routing accuracy** — predicted intent vs. labeled intent
-- **Grounding rate** — answers that contain the expected facts (faithfulness proxy)
-- **SQL success rate** — share of product queries that execute and return usable rows
+- **Faithfulness** — LLM-as-judge: is the answer supported by the retrieved context?
+- **Grounding rate** — keyword check that expected facts appear
+- **SQL success rate** — product queries that execute and return usable rows
 - **Avg latency** — per-query wall-clock time
 
 ---
@@ -104,14 +127,16 @@ It writes `eval/reports/report.json` and `eval/reports/metrics.png`:
 ## Tech stack
 
 `Streamlit` · `Groq (gpt-oss-120b)` · `ChromaDB` · `sentence-transformers`
-(bi-encoder retrieval + cross-encoder rerank) · `SQLite` · `pytest` · `ruff`
+(bi-encoder retrieval + cross-encoder rerank) · `SQLite` · `Flipkart scraping
+(requests + BeautifulSoup)` · `Apache Airflow` · `pytest` · `ruff`
 · `GitHub Actions` · `Docker`
 
 ## Project structure
 
 ```
 app/        chatbot: router, faq, sql, smalltalk, memory, llm, config
-data/       build_db.py — reproducible CSV → SQLite pipeline
+etl/        scrape.py + extract/transform/validate/load + pipeline.py
+airflow/    dags/ + docker-compose.yaml (LocalExecutor)
 eval/       golden_dataset.json + evaluate.py (metrics + charts)
 tests/      unit + smoke tests (no API key needed)
 .github/    CI workflow
@@ -130,19 +155,26 @@ tests/      unit + smoke tests (no API key needed)
    cp .env.example app/.env   # then edit app/.env
    ```
    Get a free key at <https://console.groq.com/keys>.
-3. Build the catalog database from the CSV:
+3. Build the catalog database from the committed snapshot:
    ```bash
-   python data/build_db.py
+   python -m etl.pipeline
    ```
+   To refresh the snapshot from Flipkart first: `pip install -r requirements-dev.txt && python -m etl.scrape --pages 20`
 4. Run the app:
    ```bash
    streamlit run app/main.py
    ```
 
+### Run the ETL in Airflow (local)
+
+```bash
+cd airflow && docker compose up      # UI at http://localhost:8080 (airflow/airflow)
+```
+
 ### Run with Docker
 
 ```bash
-docker compose up --build   # reads GROQ_API_KEY from your environment
+docker compose up --build            # reads GROQ_API_KEY from your environment
 ```
 
 ### Run the tests

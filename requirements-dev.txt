@@ -2,3 +2,6 @@
 pytest==7.4.0
 ruff==0.6.9
 matplotlib==3.8.4
+# Scraping (etl/scrape.py only; the pipeline itself reads the CSV snapshot)
+requests==2.32.5
+beautifulsoup4==4.12.3

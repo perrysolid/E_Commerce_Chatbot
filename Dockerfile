@@ -8,8 +8,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Build the SQLite catalog from the committed CSV at image build time.
-RUN python data/build_db.py
+# Build the SQLite catalog from the committed snapshot at image build time.
+RUN python -m etl.pipeline
 
 EXPOSE 8501
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1

@@ -179,3 +179,9 @@ app/chroma/
 eval/reports/
 app/Untitled.ipynb
 app/.ipynb_checkpoints/
+
+# IDE & misc
+.idea/
+*.jpg
+app/resources/*.png
+web-scrapping/

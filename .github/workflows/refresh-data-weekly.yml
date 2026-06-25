@@ -24,8 +24,8 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
-      - name: Scrape Flipkart — deep (keep last good snapshot if blocked)
-        run: python -m etl.scrape --pages 20 --min-rows 1000
+      - name: Scrape Flipkart — full depth (keep last good snapshot if blocked)
+        run: python -m etl.scrape --pages 60 --min-rows 1000
 
       - name: Rebuild catalog (sanity check)
         run: python -m etl.pipeline

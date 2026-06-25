@@ -129,6 +129,8 @@ def scrape(pages: int = 20, delay: float = 1.0, min_rows: int = 0) -> pd.DataFra
                 new += 1
             print(f"  {category} p{page}: +{new} (total {len(rows)})")
             time.sleep(delay)
+            if new == 0 and page > 1:
+                break  # category exhausted (Flipkart returns no new results)
     df = pd.DataFrame(rows)
     # Safety guard: if the scrape was blocked/throttled and returned too little,
     # keep the last good snapshot instead of merging in garbage.

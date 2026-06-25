@@ -295,7 +295,9 @@ def ask(query: str, memory: ConversationMemory, category: str) -> str:
     if routed.name == "faq":
         return faq_chain(query, history)
     if routed.name == "sql":
-        return sql_chain(query, history)
+        # Query the category's view (clean columns) when a real category is chosen.
+        sql_category = category if category in CATEGORIES else None
+        return sql_chain(query, history, category=sql_category)
     if routed.name == "small-talk":
         return small_talk_chain(query, history)
     return CLARIFY

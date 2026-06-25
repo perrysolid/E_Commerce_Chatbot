@@ -102,7 +102,7 @@ def _parse_card(card) -> Optional[Dict]:
     }
 
 
-def scrape(pages: int = 20, delay: float = 1.0) -> pd.DataFrame:
+def scrape(pages: int = 20, delay: float = 1.0, min_rows: int = 0) -> pd.DataFrame:
     seen = set()
     rows: List[Dict] = []
     for category, query in CATEGORIES.items():
@@ -127,6 +127,11 @@ def scrape(pages: int = 20, delay: float = 1.0) -> pd.DataFrame:
             print(f"  {category} p{page}: +{new} (total {len(rows)})")
             time.sleep(delay)
     df = pd.DataFrame(rows)
+    # Safety guard: if the scrape was blocked/throttled and returned too little,
+    # keep the last good snapshot instead of overwriting it with garbage.
+    if min_rows and len(df) < min_rows:
+        print(f"Only {len(df)} rows (< {min_rows}); keeping existing snapshot.")
+        return df
     RAW_CSV.parent.mkdir(exist_ok=True)
     df.to_csv(RAW_CSV, index=False)
     print(f"Saved {len(df)} products to {RAW_CSV}")
@@ -137,4 +142,5 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--pages", type=int, default=20)
     ap.add_argument("--delay", type=float, default=1.0)
+    ap.add_argument("--min-rows", type=int, default=0, dest="min_rows")
     scrape(**vars(ap.parse_args()))

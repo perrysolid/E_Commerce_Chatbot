@@ -5,7 +5,7 @@ import router
 
 @pytest.mark.parametrize("query,expected", [
     ("What is your return policy?", "faq"),
-    ("Show me nike shoes under 3000", "sql"),
+    ("Show me Samsung mobiles under 20000", "sql"),
     ("hello there", "small-talk"),
 ])
 def test_routes_known_intents(query, expected):

@@ -1,4 +1,7 @@
-# 🛍️ Indian Electronics Store Chatbot — RAG + Text-to-SQL with an Airflow ETL pipeline
+# 🛒 Saarthi — Flipkart Electronics Chatbot
+
+> *Saarthi* (सारथी) means "guide / charioteer" — your guide to Flipkart electronics.
+> A grounded RAG + Text-to-SQL assistant with an Airflow-orchestrated ETL pipeline.
 
 ![CI](https://github.com/perrysolid/E_Commerce_Chatbot/actions/workflows/ci.yml/badge.svg)
 

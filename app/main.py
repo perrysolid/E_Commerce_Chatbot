@@ -61,8 +61,10 @@ CSS = """
     padding: 1.6rem 1.8rem; border-radius: 18px; color: #fff; margin-bottom: 1rem;
     animation: fade 0.6s ease;
 }
-.hero h1 { margin: 0; font-size: 1.7rem; }
-.hero p { margin: 0.4rem 0 0; opacity: 0.92; font-size: 0.96rem; }
+.hero h1 { margin: 0; font-size: 1.9rem; letter-spacing: 0.5px; }
+.hero .sub { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px;
+    opacity: 0.85; margin-top: 0.15rem; }
+.hero p { margin: 0.6rem 0 0; opacity: 0.92; font-size: 0.96rem; }
 .cap { display:flex; gap:0.6rem; margin:0.9rem 0 0.3rem; flex-wrap:wrap; }
 .cap div {
     flex:1; min-width:170px; background:rgba(124,58,237,0.07);
@@ -117,7 +119,8 @@ def _stream(text: str):
 
 
 # --- UI -----------------------------------------------------------------------
-st.set_page_config(page_title="Electronics Store Chatbot", page_icon="🛍️", layout="centered")
+st.set_page_config(page_title="Saarthi — Flipkart Electronics Chatbot",
+                   page_icon="🛒", layout="centered")
 st.markdown(CSS, unsafe_allow_html=True)
 _bootstrap()
 
@@ -133,9 +136,10 @@ if "pending" not in st.session_state:
 st.markdown(
     """
     <div class="hero">
-      <h1>🛍️ Electronics Store Assistant</h1>
-      <p>I help you shop an Indian electronics catalog — search products by price,
-      brand &amp; rating, and answer store questions like returns, delivery and payments.
+      <h1>🛒 Saarthi</h1>
+      <div class="sub">Flipkart Electronics Chatbot</div>
+      <p>Your guide to Flipkart electronics — search products by price, brand &amp;
+      rating, and ask store questions like returns, delivery and payments.
       All answers come from real Flipkart data, refreshed daily.</p>
     </div>
     """,

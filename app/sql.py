@@ -16,7 +16,7 @@ import pandas as pd
 from config import DB_PATH, SQL_MAX_RETRIES
 from llm import chat
 
-SQL_PROMPT = """You are an expert at writing SQLite queries for an e-commerce product table.
+SQL_PROMPT = """You are an expert at writing SQLite queries for an electronics store product table.
 The schema is provided in the schema tags.
 <schema>
 table: product
@@ -24,14 +24,16 @@ fields:
 product_link - string (hyperlink to product)
 title - string (name of the product)
 brand - string (brand of the product)
-category - string (product category, e.g. 'shoes')
+category - string, one of:
+  mobiles, laptops, headphones, smartwatches, televisions, tablets, earbuds
 price - integer (price in Indian Rupees)
 discount - float (0.1 means 10 percent off, 0.2 means 20 percent off)
 avg_rating - float (0-5, higher is better)
 total_ratings - integer (number of ratings)
 </schema>
 Rules:
-- Match brand case-insensitively using LIKE (e.g. brand LIKE '%nike%'). Never use ILIKE.
+- Match brand case-insensitively using LIKE (e.g. brand LIKE '%samsung%'). Never use ILIKE.
+- Use the category column for product types (e.g. category = 'laptops').
 - Always SELECT * (all fields).
 - Return ONLY the query, wrapped in <SQL></SQL> tags. Nothing else."""
 

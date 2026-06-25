@@ -27,12 +27,12 @@ ROUTES: Dict[str, List[str]] = {
         "How quickly can I get my order delivered?",
     ],
     "sql": [
-        "I want to buy nike shoes that have 50% discount.",
-        "Are there any shoes under Rs. 3000?",
-        "Do you have formal shoes in size 9?",
-        "Are there any Puma shoes on sale?",
-        "What is the price of puma running shoes?",
-        "Show me the top rated adidas shoes",
+        "I want to buy a Samsung phone under 20000.",
+        "Are there any laptops under Rs. 50000?",
+        "Show me boAt headphones on sale.",
+        "Which smartwatches have the best rating?",
+        "What is the price of an iPhone?",
+        "Show me the top rated 43 inch televisions",
     ],
     "small-talk": [
         "Hi",

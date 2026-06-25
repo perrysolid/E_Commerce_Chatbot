@@ -43,7 +43,7 @@ def ask(query: str, memory: ConversationMemory) -> str:
 
 
 _bootstrap()
-st.title("🛍️ E-Commerce Chatbot")
+st.title("🛍️ Electronics Store Chatbot")
 
 if "memory" not in st.session_state:
     st.session_state.memory = ConversationMemory()

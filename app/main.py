@@ -21,7 +21,7 @@ import streamlit as st
 from config import DB_PATH, ROUTER_CONFIDENCE_THRESHOLD
 from faq import faq_chain, ingest_faq_data
 from memory import ConversationMemory
-from router import route
+from router import resolve_intent, route
 from smalltalk import small_talk_chain
 from sql import sql_chain
 
@@ -290,15 +290,19 @@ def ask(query: str, memory: ConversationMemory, category: str) -> str:
     if category and category != BROWSE_ALL:
         history = f"{history}\nThe user is shopping in the '{category}' category.".strip()
 
-    if routed.name is None or routed.confidence < ROUTER_CONFIDENCE_THRESHOLD:
+    intent = resolve_intent(routed, ROUTER_CONFIDENCE_THRESHOLD, memory.last_intent)
+
+    if intent is None:
         return CLARIFY
-    if routed.name == "faq":
+    if intent == "faq":
+        memory.last_intent = "faq"
         return faq_chain(query, history)
-    if routed.name == "sql":
+    if intent == "sql":
+        memory.last_intent = "sql"
         # Query the category's view (clean columns) when a real category is chosen.
         sql_category = category if category in CATEGORIES else None
         return sql_chain(query, history, category=sql_category)
-    if routed.name == "small-talk":
+    if intent == "small-talk":
         return small_talk_chain(query, history)
     return CLARIFY
 

@@ -6,7 +6,7 @@ one-paragraph summary. This is enough to resolve follow-ups like
 """
 from __future__ import annotations
 
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from llm import chat
 
@@ -16,6 +16,10 @@ class ConversationMemory:
         self.window = window
         self.turns: List[Tuple[str, str]] = []  # (role, content)
         self.summary: str = ""
+        # The last content intent we resolved ('sql' or 'faq'). A short follow-up
+        # like "color black" is ambiguous on its own, so the router falls back to
+        # this to keep refining the same search instead of losing the thread.
+        self.last_intent: Optional[str] = None
 
     def add(self, role: str, content: str) -> None:
         self.turns.append((role, content))

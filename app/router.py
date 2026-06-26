@@ -81,6 +81,23 @@ def route(query: str) -> Routed:
     return Routed(name=_route_names[best], confidence=float(sims[best]))
 
 
+def resolve_intent(routed: Routed, threshold: float,
+                   last_intent: Optional[str] = None) -> Optional[str]:
+    """Pick the intent to act on, resolving ambiguous follow-ups.
+
+    A bare refinement like "color black" doesn't resemble any route on its own and
+    scores below ``threshold``. When that happens mid-search (``last_intent`` is
+    'sql'), we stick with that search instead of falling back to a clarifying
+    question — that's what gives the conversation its memory. Returns None when the
+    query is genuinely ambiguous and should trigger a clarifying question.
+    """
+    if routed.name is not None and routed.confidence >= threshold:
+        return routed.name
+    if last_intent == "sql":
+        return "sql"
+    return None
+
+
 if __name__ == "__main__":
     for q in ["What is your policy on defective product?",
               "Pink Puma shoes in price range 1000 to 5000",

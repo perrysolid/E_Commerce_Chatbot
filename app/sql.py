@@ -75,6 +75,11 @@ fields:
 {schema}
 </schema>
 Rules:
+- The user message may include earlier conversation. Treat the latest question as a
+  REFINEMENT that adds to the constraints already established (carry forward brand,
+  price, rating, and spec filters from earlier turns) — e.g. after "phones under 20000"
+  a follow-up "color black" means price < 20000 AND color LIKE '%black%'. Only drop the
+  earlier constraints if the user clearly starts a new search.
 - Query ONLY the table named '{table}'.
 - Match brand case-insensitively with LIKE (e.g. brand LIKE '%samsung%'). Never use ILIKE.
 - Model/series names (e.g. 'iPhone', 'Galaxy F36', 'Rockerz') live in the TITLE, not the

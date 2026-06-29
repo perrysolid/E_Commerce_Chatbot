@@ -9,18 +9,23 @@ actually happens via a GitHub Actions cron (no always-on server needed) — see
 ## Run locally (no Docker)
 
 ```bash
-pip install "apache-airflow==2.9.3"
-
-export AIRFLOW_HOME="$(pwd)/.airflow"
-export PROJECT_ROOT="$(cd .. && pwd)"          # repo root, so `etl` is importable
-export AIRFLOW__CORE__DAGS_FOLDER="$(pwd)/dags"
-export AIRFLOW__CORE__LOAD_EXAMPLES=False
-
-airflow standalone        # UI at http://localhost:8080 (admin creds printed once)
+bash run-local.sh         # from the airflow/ dir
 ```
 
-Then enable the `electronics_catalog_etl` DAG in the UI, or trigger it:
+First run creates `airflow/.venv` (Airflow 2.9.3 + the libs the `etl` package
+needs) and starts everything; later runs are instant. The UI comes up at
+http://localhost:8080 and the admin password is printed once (also saved to
+`airflow/.airflow/standalone_admin_password.txt`). Both `.venv` and `.airflow`
+are gitignored.
+
+Then enable the `electronics_catalog_etl` DAG in the UI and hit ▶, or trigger it:
 
 ```bash
 airflow dags trigger electronics_catalog_etl
 ```
+
+The script sets `PROJECT_ROOT` (so `etl` imports), disables example DAGs, and
+applies two macOS fixes: it puts the venv on `PATH` (Airflow spawns child
+processes that call `airflow`) and pins `setproctitle==1.2.2` — the 1.3.x
+release crashes the webserver's forked gunicorn workers with SIGSEGV because it
+calls a fork-unsafe CoreFoundation API.

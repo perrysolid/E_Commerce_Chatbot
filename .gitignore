@@ -136,6 +136,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# Airflow local run (launcher creates these; not committed)
+airflow/.venv/
+airflow/.airflow/
+
 # Spyder project settings
 .spyderproject
 .spyproject

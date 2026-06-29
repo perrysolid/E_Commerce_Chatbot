@@ -35,5 +35,13 @@ jobs:
           git config user.name "parth mishra"
           git config user.email "parthmishra2504@gmail.com"
           git add data/flipkart_electronics_raw.csv
-          git diff --staged --quiet || git commit -m "chore: weekly deep data refresh [skip ci]"
-          git push
+          git diff --staged --quiet && exit 0
+          git commit -m "chore: weekly deep data refresh [skip ci]"
+          # The deep scrape runs ~1h; the daily run may push in the meantime, so
+          # rebase onto the latest remote (keeping our freshly scraped CSV) and
+          # retry a few times before giving up.
+          for i in 1 2 3 4 5; do
+            git pull --rebase -X theirs origin main && git push && exit 0
+            sleep 10
+          done
+          echo "::error::push failed after 5 retries" && exit 1
